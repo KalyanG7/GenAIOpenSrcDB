@@ -39,7 +39,7 @@ public class PdfFileReader {
     public void process() {
 		
 
-        List<Document> documents = new ArrayList<>();
+       
 
         var config = PdfDocumentReaderConfig.builder()
                 .withPageExtractedTextFormatter(
@@ -55,6 +55,7 @@ public class PdfFileReader {
         } */
         
         for (Resource resource : pdfResource) {
+        	List<Document> documents = new ArrayList<>();
 	        var pdfReader = new PagePdfDocumentReader(resource, config);
 	        var textSplitter = new TokenTextSplitter();
 	        documents.addAll(textSplitter.apply(pdfReader.get()));
