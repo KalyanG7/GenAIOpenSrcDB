@@ -28,7 +28,11 @@ import org.opensearch.client.indices.CreateIndexResponse;
 import org.opensearch.common.settings.Settings;
 import org.springframework.ai.document.Document;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+@RestController
 @Component
 public class OpenSearchService {
 	
@@ -43,7 +47,8 @@ public class OpenSearchService {
 	    
 	}
 	 
-	 
+	 @CrossOrigin(origins = "http://127.0.0.1:4200")
+	 @GetMapping("/test/createIndex")
 	 public void createIndex() {
 		  //Create a non-default index with custom settings and mappings.
 	      CreateIndexRequest createIndexRequest = new CreateIndexRequest("custom-index");
@@ -69,52 +74,70 @@ public class OpenSearchService {
 
 	 }
 
-	//Adding data to the index.
-	public void addData(String id, String message) {
-		  IndexRequest request = new IndexRequest("custom-index"); //Add a document to the custom-index we created.
-		    request.id(id); //Assign an ID to the document.
-
-		    HashMap<String, String> stringMapping = new HashMap<String, String>();
-		    stringMapping.put("message:", message);
-		    request.source(stringMapping); 
-		    System.out.print("'Message Saved");
-		    //Place your content into the index's source.
-		/*    try {
-				IndexResponse indexResponse = client.index(request, RequestOptions.DEFAULT);
-				  //Getting back the document
-			    GetRequest getRequest = new GetRequest("custom-index", "1");
-			    GetResponse response = client.get(getRequest, RequestOptions.DEFAULT);
-
-			    System.out.println(response.getSourceAsString()); 
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}*/
-
-		  
-	}
   
-	public void addData(List<Document> documents) {
-		    IndexRequest request = new IndexRequest("pdfdocuments"); //Add a document to the custom-index we created.
-		    request.source(documents); 
-		    
-		    //Place your content into the index's source.
-		/*    try {
-				IndexResponse indexResponse = client.index(request, RequestOptions.DEFAULT);
-				  //Getting back the document
-			    GetRequest getRequest = new GetRequest("custom-index", "1");
-			    GetResponse response = client.get(getRequest, RequestOptions.DEFAULT);
+	 @CrossOrigin(origins = "http://127.0.0.1:4200")
+	 @GetMapping("/test/addData")
+	public void addData() {
+		  //Adding data to the index.
+	    IndexRequest request = new IndexRequest("custom-index"); //Add a document to the custom-index we created.
+	    request.id("1"); //Assign an ID to the document.
 
-			    System.out.println(response.getSourceAsString()); 
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}*/
-
-		  
+	    HashMap<String, String> stringMapping = new HashMap<String, String>();
+	    stringMapping.put("message:", "Testing Java REST client");
+	    request.source(stringMapping); //Place your content into the index's source.
+	    try {
+			IndexResponse indexResponse = this.client.index(request, RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	    
 	}
 
 
+	 @CrossOrigin(origins = "http://127.0.0.1:4200")
+	 @GetMapping("/test/getData")
+	public void getData() {
+	    //Getting back the document
+	    GetRequest getRequest = new GetRequest("custom-index", "1");
+	    GetResponse response=null;
+		try {
+			response = this.client.get(getRequest, RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	    System.out.println(response.getSourceAsString());
+	}
 	
+	 @CrossOrigin(origins = "http://127.0.0.1:4200")
+	 @GetMapping("/test/deleteData")
+	public void deleteData() {
+		
+		DeleteRequest deleteDocumentRequest = new DeleteRequest("custom-index", "1"); //Index name followed by the ID.
+	    try {
+			DeleteResponse deleteResponse = client.delete(deleteDocumentRequest, RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+	
+	 @CrossOrigin(origins = "http://127.0.0.1:4200")
+	 @GetMapping("/test/deleteIndex")
+	public void deleteIndex() {
+		 DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest("custom-index"); //Index name.
+		  try {
+			AcknowledgedResponse deleteIndexResponse = this.client.indices().delete(deleteIndexRequest, RequestOptions.DEFAULT);
+			this.client.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		 
+	}
 
 }
