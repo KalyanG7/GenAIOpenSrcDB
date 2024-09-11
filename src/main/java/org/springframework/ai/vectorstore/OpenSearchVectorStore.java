@@ -26,7 +26,9 @@ import org.opensearch.client.opensearch.core.BulkResponse;
 import org.opensearch.client.opensearch.core.search.Hit;
 import org.opensearch.client.opensearch.indices.CreateIndexRequest;
 import org.opensearch.client.opensearch.indices.CreateIndexResponse;
+import org.opensearch.client.opensearch.indices.IndexSettings;
 import org.opensearch.client.transport.endpoints.BooleanResponse;
+import org.opensearch.common.settings.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
@@ -46,6 +48,7 @@ import io.micrometer.observation.ObservationRegistry;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -86,7 +89,17 @@ public class OpenSearchVectorStore extends AbstractObservationVectorStore implem
 	private final FilterExpressionConverter filterExpressionConverter;
 
 	private final String mappingJson;
+	
+	public final String mappingSettings = """
+			{ "index" : {
+	            "number_of_shards" : 6,
+	            "number_of_replicas" : 2
+			   }
+			}
+			""";
 
+
+	
 	private String similarityFunction;
 
 	private final boolean initializeSchema;
@@ -124,6 +137,7 @@ public class OpenSearchVectorStore extends AbstractObservationVectorStore implem
 		// https://opensearch.org/docs/latest/search-plugins/knn/approximate-knn/#spaces
 		this.similarityFunction = COSINE_SIMILARITY_FUNCTION;
 		this.initializeSchema = initializeSchema;
+		this.createIndexMapping(index,mappingSettings, mappingJson);
 	}
 
 	public OpenSearchVectorStore withSimilarityFunction(String similarityFunction) {
@@ -142,6 +156,7 @@ public class OpenSearchVectorStore extends AbstractObservationVectorStore implem
 			bulkRequestBuilder
 				.operations(op -> op.index(idx -> idx.index(this.index).id(document.getId()).document(document)));
 		}
+		System.out.println(" Document Id--"+documents.getLast().getId());
 		bulkRequest(bulkRequestBuilder.build());
 	}
 
@@ -237,27 +252,32 @@ public class OpenSearchVectorStore extends AbstractObservationVectorStore implem
 		}
 	}
 
-	private CreateIndexResponse createIndexMapping(String index, String mappingJson) {
+	private CreateIndexResponse createIndexMapping(String index,String mappingSettings, String mappingJson) {
 		
 		System.out.println("Index creation starting");
 		JsonpMapper jsonpMapper = openSearchClient._transport().jsonpMapper();
 		try {
 			return this.openSearchClient.indices()
 				.create(new CreateIndexRequest.Builder().index(index)
-					.settings(settingsBuilder -> settingsBuilder.knn(true))
+					//.settings(settingsBuilder -> settingsBuilder.knn(true))	
+					.settings(IndexSettings._DESERIALIZER.deserialize(
+								jsonpMapper.jsonProvider().createParser(new StringReader(mappingSettings)), jsonpMapper))	
 					.mappings(TypeMapping._DESERIALIZER.deserialize(
 							jsonpMapper.jsonProvider().createParser(new StringReader(mappingJson)), jsonpMapper))
 					.build());
+			
+		
 		}
 		catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+		
 	}
 
 	@Override
 	public void afterPropertiesSet() {
 		if (this.initializeSchema && !exists(this.index)) {
-			createIndexMapping(this.index, this.mappingJson);
+			createIndexMapping(this.index,this.mappingSettings, this.mappingJson);
 		}
 	}
 
