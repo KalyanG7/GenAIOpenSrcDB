@@ -9,6 +9,7 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.chat.prompt.SystemPromptTemplate;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -31,9 +32,28 @@ public class ChatController {
     @GetMapping("/demo/answerpdf")
     public ResponseEntity<String> generateAnswer(@RequestParam String query) {
     	
-    	List<Document> similarDocuments = vectorStore.similaritySearch(query);
-    	similarDocuments.stream().forEach(System.out::println);
-		return null;
+    	  List<Document> similarDocuments = vectorStore.similaritySearch(query);
+          String information = similarDocuments.stream()
+                  .map(Document::getContent)
+                  .collect(Collectors.joining(System.lineSeparator()));
+          var systemPromptTemplate = new SystemPromptTemplate(
+                  """
+                              You are a helpful assistant.
+                              Use only the following information to answer the question.
+                              Do not use any other information. If you do not know, simply answer: Unknown.
+
+                              {information}
+                          """);
+          var systemMessage = systemPromptTemplate.createMessage(Map.of("information", information));
+          var userPromptTemplate = new PromptTemplate("{query}");
+          var userMessage = userPromptTemplate.createMessage(Map.of("query", query));
+          var prompt = new Prompt(List.of(systemMessage, userMessage));
+          return ResponseEntity.ok(aiClient.prompt(prompt).call().content());
+       //   return ResponseEntity.ok(aiClient.call(prompt).getResult().getOutput().getContent());
+    	
+     //  List<Document> similarDocuments = vectorStore.similaritySearch(query);
+     //  similarDocuments.stream().forEach(System.out::println);
+	//	return null;
     	   
     /*    String information = similarDocuments.stream()
                 .map(Document::getContent)

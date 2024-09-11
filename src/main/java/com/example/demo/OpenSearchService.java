@@ -99,7 +99,7 @@ public class OpenSearchService {
 	 @GetMapping("/test/getData")
 	public void getData() {
 	    //Getting back the document
-	    GetRequest getRequest = new GetRequest("custom-index", "1");
+	    GetRequest getRequest = new GetRequest("pdfdocuments", "a38f7fca-d638-484b-aebe-f5a3fa37c240");
 	    GetResponse response=null;
 		try {
 			response = this.client.get(getRequest, RequestOptions.DEFAULT);
@@ -108,7 +108,8 @@ public class OpenSearchService {
 			e.printStackTrace();
 		}
 
-	    System.out.println(response.getSourceAsString());
+	   // System.out.println(response.getSourceAsString());
+		System.out.println(response.getSourceAsString());
 	}
 	
 	 @CrossOrigin(origins = "http://127.0.0.1:4200")

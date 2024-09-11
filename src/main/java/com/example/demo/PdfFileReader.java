@@ -39,29 +39,27 @@ public class PdfFileReader {
     public void process() {
 		
 
-       
-
+      
         var config = PdfDocumentReaderConfig.builder()
                 .withPageExtractedTextFormatter(
                         new ExtractedTextFormatter.Builder()
                                 .build())
                 .build();
    
-     /*   for (Resource resource : pdfResource) {
+        for (Resource resource : pdfResource) {
             var pdfReader = new PagePdfDocumentReader(resource, config);
             var textSplitter = new TokenTextSplitter();
-            vectorStore.add(textSplitter.apply(pdfReader.get())); 
-          //  this.openSearchService.addData(textSplitter.apply(pdfReader.get()));
-        } */
+            vectorStore.accept(textSplitter.apply(pdfReader.get()));
+        }
         
-        for (Resource resource : pdfResource) {
+   /*     for (Resource resource : pdfResource) {
         	List<Document> documents = new ArrayList<>();
 	        var pdfReader = new PagePdfDocumentReader(resource, config);
 	        var textSplitter = new TokenTextSplitter();
 	        documents.addAll(textSplitter.apply(pdfReader.get()));
-            vectorStore.add(documents); 
-      //  this.openSearchService.addData(textSplitter.apply(pdfReader.get()));
-       } 
+	        System.out.println(" Id--"+documents.getLast().getId());
+            vectorStore.add(documents);      
+       } */
         
       
     
