@@ -32,7 +32,9 @@ public class ChatController {
     @GetMapping("/demo/answerpdf")
     public ResponseEntity<String> generateAnswer(@RequestParam String query) {
     	
-    	  List<Document> similarDocuments = vectorStore.similaritySearch(query);
+    	 String customQuery = query; //+ " and it page number";
+    	
+    	  List<Document> similarDocuments = vectorStore.similaritySearch(customQuery);
           String information = similarDocuments.stream()
                   .map(Document::getContent)
                   .collect(Collectors.joining(System.lineSeparator()));
@@ -46,31 +48,12 @@ public class ChatController {
                           """);
           var systemMessage = systemPromptTemplate.createMessage(Map.of("information", information));
           var userPromptTemplate = new PromptTemplate("{query}");
-          var userMessage = userPromptTemplate.createMessage(Map.of("query", query));
+          var userMessage = userPromptTemplate.createMessage(Map.of("query", customQuery));
           var prompt = new Prompt(List.of(systemMessage, userMessage));
-          return ResponseEntity.ok(aiClient.prompt(prompt).call().content());
-       //   return ResponseEntity.ok(aiClient.call(prompt).getResult().getOutput().getContent());
-    	
-     //  List<Document> similarDocuments = vectorStore.similaritySearch(query);
-     //  similarDocuments.stream().forEach(System.out::println);
-	//	return null;
-    	   
-    /*    String information = similarDocuments.stream()
-                .map(Document::getContent)
-                .collect(Collectors.joining(System.lineSeparator()));
-        var systemPromptTemplate = new SystemPromptTemplate(
-                """
-                            You are a helpful assistant.
-                            Use only the following information to answer the question.
-                            Do not use any other information. If you do not know, simply answer: Unknown.
-
-                            {information}
-                        """);
-        var systemMessage = systemPromptTemplate.createMessage(Map.of("information", information));
-        var userPromptTemplate = new PromptTemplate("{query}");
-        var userMessage = userPromptTemplate.createMessage(Map.of("query", query));
-        var prompt = new Prompt(List.of(systemMessage, userMessage));*/
-    	
-      //  return ResponseEntity.ok(aiClient.prompt(prompt).call().content());
+          var aiResponse = aiClient.prompt(prompt).call().content();         
+       //   System.out.println("Ai response"+aiResponse);
+       //   aiResponse.replace("The document provided does not have page numbers", "");
+          return ResponseEntity.ok(aiResponse);
+      
     }
 }
