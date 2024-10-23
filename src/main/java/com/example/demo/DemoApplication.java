@@ -69,7 +69,7 @@ class AppConfig {
  	     OpenSearchClient client = new OpenSearchClient((OpenSearchTransport) transport);
  	
  	     
-       /* this.embeddingModel = new OpenAiEmbeddingModel(
+      /* this.embeddingModel = new OpenAiEmbeddingModel(
  	           this.openaiApiKey,
  	           MetadataMode.EMBED,
  	           OpenAiEmbeddingOptions.builder()
