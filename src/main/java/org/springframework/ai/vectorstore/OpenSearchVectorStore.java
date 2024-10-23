@@ -137,7 +137,8 @@ public class OpenSearchVectorStore extends AbstractObservationVectorStore implem
 		// https://opensearch.org/docs/latest/search-plugins/knn/approximate-knn/#spaces
 		this.similarityFunction = COSINE_SIMILARITY_FUNCTION;
 		this.initializeSchema = initializeSchema;
-		this.createIndexMapping(index,mappingSettings, mappingJson);
+		
+		if(!exists(index)) this.createIndexMapping(index,mappingSettings, mappingJson);
 	}
 
 	public OpenSearchVectorStore withSimilarityFunction(String similarityFunction) {
@@ -204,6 +205,8 @@ public class OpenSearchVectorStore extends AbstractObservationVectorStore implem
 					.inline(inlineScriptBuilder -> inlineScriptBuilder.source("knn_score")
 						.lang("knn")
 						.params("field", JsonData.of("embedding"))
+					//	.params("from", JsonData.of("0"))
+					//	.params("size", JsonData.of("10"))
 						.params("query_value", JsonData.of(embedding))
 						.params("space_type", JsonData.of(this.similarityFunction))));
 			// https://opensearch.org/docs/latest/search-plugins/knn/knn-score-script
@@ -255,7 +258,9 @@ public class OpenSearchVectorStore extends AbstractObservationVectorStore implem
 	private CreateIndexResponse createIndexMapping(String index,String mappingSettings, String mappingJson) {
 		
 		System.out.println("Index creation starting");
-		JsonpMapper jsonpMapper = openSearchClient._transport().jsonpMapper();
+		JsonpMapper jsonpMapper = openSearchClient._transport().jsonpMapper();	
+	
+				
 		try {
 			return this.openSearchClient.indices()
 				.create(new CreateIndexRequest.Builder().index(index)
